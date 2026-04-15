@@ -1,0 +1,31 @@
+name: Build Emscripten
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v14
+
+      - name: Build
+        run: |
+          python3 waf configure -T release --emscripten
+          python3 waf build
+
+      - name: Collect wasm files
+        run: |
+          mkdir -p output
+          find build -name "*.wasm" | xargs -I{} cp {} output/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hlsdk-emscripten
+          path: output/
